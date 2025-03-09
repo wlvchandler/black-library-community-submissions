@@ -281,6 +281,10 @@
             // Add debugging - show column headers in console
             console.log("Column headers:", cols.map(col => col.label));
             
+            // Directly log the first few rows for debugging
+            console.log("First row data sample:", rows[1]?.c);
+            console.log("Second row data sample:", rows[2]?.c);
+            
             // Map column headers to indices - more flexible with sanitization
             const headerMap = {};
             cols.forEach((col, index) => {
@@ -301,6 +305,7 @@
             });
             
             console.log("Header mapping:", headerMap);
+            console.log("Submission text column index:", headerMap['submission'] || headerMap['submissiontext']);
             
             // Show total rows for debugging
             console.log(`Processing ${rows.length} rows of data`);
@@ -316,13 +321,34 @@
                 }
                 
                 try {
-                    // Try to extract required fields (username and submission text are essential)
-                    const username = row[headerMap['username']]?.v || 'Anonymous';
-                    const submissionText = row[headerMap['submission'] || headerMap['submissiontext']]?.v || '';
+                    // For debugging, log the specific cells we're trying to access
+                    if (i > 0) {  // Skip header row in logs
+                        const usernameCell = row[headerMap['username']];
+                        const settingCell = row[headerMap['setting']];
+                        const submissionCell = row[headerMap['submission'] || headerMap['submissiontext']];
+                        
+                        console.log(`Row ${i} data:`, {
+                            username: usernameCell?.v,
+                            setting: settingCell?.v,
+                            submissionExists: !!submissionCell,
+                            submissionValue: submissionCell?.v,
+                            submissionLength: submissionCell?.v?.length
+                        });
+                    }
                     
-                    // Skip if no submission text (likely a header row or empty submission)
-                    if (!submissionText) {
-                        console.log(`Skipping row ${i}: No submission text`);
+                    // Try to extract required fields with direct column indices as fallback
+                    // Based on your screenshot, username is column B (index 1), submission is column F (index 5)
+                    const usernameIndex = headerMap['username'] || 1;
+                    const settingIndex = headerMap['setting'] || 4;
+                    const submissionIndex = headerMap['submission'] || headerMap['submissiontext'] || 5;
+                    const charactersIndex = headerMap['characters'] || 3;
+                    
+                    const username = row[usernameIndex]?.v || 'Anonymous';
+                    let submissionText = row[submissionIndex]?.v || '';
+                    
+                    // Skip if no username or submission text (likely a header row)
+                    if (!username || !submissionText) {
+                        console.log(`Skipping row ${i}: Missing username or submission text`);
                         continue;
                     }
                     
@@ -330,28 +356,22 @@
                     const submission = {
                         timestamp: row[0]?.v || '', // First column is usually timestamp
                         username: username,
-                        authorName: row[headerMap['author'] || headerMap['author name']]?.v || '',
-                        links: row[headerMap['links']]?.v || '',
-                        characters: parseList(row[headerMap['characters']]?.v || ''),
-                        setting: parseList(row[headerMap['setting']]?.v || ''),
+                        authorName: row[headerMap['author'] || 2]?.v || '',
+                        links: row[headerMap['links'] || 3]?.v || '',
+                        characters: parseList(row[charactersIndex]?.v || ''),
+                        setting: parseList(row[settingIndex]?.v || ''),
                         submissionText: submissionText
                     };
                     
-                    // If we're missing critical fields, try direct indices as a fallback
-                    if (!submission.username && row[1]) submission.username = row[1].v || 'Anonymous';
-                    if (!submission.submissionText && row[6]) submission.submissionText = row[6].v || 'No content provided';
-                    
-                    // One last check to make sure we have content
-                    if (submission.submissionText && submission.submissionText !== 'No content provided') {
-                        submissions.push(submission);
-                        console.log(`Added submission from: ${submission.username}`);
-                    } else {
-                        console.log(`Skipping row ${i}: Invalid submission data`);
-                    }
+                    submissions.push(submission);
+                    console.log(`Added submission from: ${submission.username}`);
                 } catch (error) {
                     console.error(`Error processing row ${i}:`, error);
                 }
             }
+            
+            return submissions;
+        }
             
             return submissions;
         }
