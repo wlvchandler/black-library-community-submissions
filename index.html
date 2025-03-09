@@ -13,15 +13,35 @@
             line-height: 1.6;
             color: #333;
             background-color: #f9f9f9;
+            position: relative;
         }
         header {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         h1 {
             color: #222;
+            margin-bottom: 10px;
+        }
+        .submit-button {
+            background-color: #4a135a;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        .submit-button:hover {
+            background-color: #5c1a6e;
         }
         .search-section {
             background: white;
@@ -85,6 +105,12 @@
             margin-bottom: 25px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .submission:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .submission h2 {
             margin-top: 0;
@@ -123,15 +149,24 @@
         .setting-tag {
             background-color: #e8f5e9;
         }
-        .content {
-            line-height: 1.7;
-            white-space: pre-wrap;
-        }
         #loading {
             text-align: center;
             padding: 30px;
             font-style: italic;
             color: #666;
+        }
+        .read-more {
+            display: inline-block;
+            background-color: #4a135a;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .read-more:hover {
+            background-color: #5c1a6e;
         }
         .links {
             margin-top: 10px;
@@ -143,6 +178,76 @@
         .links a:hover {
             text-decoration: underline;
         }
+        /* Modal Reader Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+        .modal-reader {
+            background-color: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #000;
+        }
+        .story-title {
+            margin-top: 0;
+            color: #333;
+            font-size: 2em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .story-author {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .story-content {
+            line-height: 1.8;
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .author-info {
+            margin-top: 20px;
+            padding-top: 15px;
+        }
+        .author-info-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #4a135a;
+        }
         @media (max-width: 768px) {
             .submission {
                 padding: 15px;
@@ -151,6 +256,10 @@
                 flex-direction: column;
                 gap: 8px;
             }
+            .modal-reader {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -158,17 +267,15 @@
     <header>
         <h1>Black Library Open Submissions Collection</h1>
         <p>A community collection of stories submitted for the Black Library open submissions window.</p>
-        <div style="margin-top: 10px; font-size: 0.9em;">
-            <p><strong>Having issues?</strong> Make sure your Google Sheet is <a href="https://support.google.com/docs/answer/183965" target="_blank">published to the web</a> (File > Share > Publish to web).</p>
-        </div>
+        <button class="submit-button" onclick="window.open('https://forms.gle/rcDED76bim8Q1j218', '_blank')">Submit Your Story</button>
     </header>
-    
+
     <div class="search-section">
         <div class="search-container">
             <label for="search">Search submissions:</label>
             <input type="text" id="search" placeholder="Search by title, author, character, content...">
         </div>
-        
+
         <div class="filter-section">
             <div class="filter-group">
                 <div class="filter-heading">Filter by setting:</div>
@@ -176,7 +283,7 @@
                     <!-- Settings will be added here dynamically -->
                 </div>
             </div>
-            
+
             <div class="filter-group">
                 <div class="filter-heading">Filter by character:</div>
                 <div class="filter-tags" id="character-filters">
@@ -185,36 +292,67 @@
             </div>
         </div>
     </div>
-    
+
     <div id="loading">Loading submissions...</div>
     <div id="submissions-container"></div>
 
+    <!-- Modal Reader -->
+    <div class="modal-overlay" id="story-modal">
+        <div class="modal-reader">
+            <button class="modal-close" id="close-modal">&times;</button>
+            <h2 class="story-title" id="modal-title"></h2>
+            <div class="story-author" id="modal-author"></div>
+            <div class="story-content" id="modal-content"></div>
+            <div class="author-info">
+                <div class="author-info-title">Like this person's story?</div>
+                <div id="modal-links"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Replace with your actual Google Sheet ID
         const SHEET_ID = '1G10zJSJqOUQ6uIzDw87mP48a5ZlhiaQvg_6w-Q1SwnY';
         const SHEET_NAME = 'Form Responses 1'; // This is typically the default name for form responses
-        
-        // Global variables
+
         let allSubmissions = [];
         let activeSettingFilters = [];
         let activeCharacterFilters = [];
-        
-        // Initialize the page
+
         document.addEventListener('DOMContentLoaded', function() {
             fetchSubmissions();
-            
-            // Set up search functionality
+
             document.getElementById('search').addEventListener('input', function() {
                 filterSubmissions();
             });
+
+            // Close modal when clicking the close button
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('story-modal').style.display = 'none';
+                document.body.style.overflow = '';
+            });
+
+            // Close modal when clicking outside the modal content
+            document.getElementById('story-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('story-modal').style.display === 'flex') {
+                    document.getElementById('story-modal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
         });
-        
-        // Fetch submissions from Google Sheets
+
         function fetchSubmissions() {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-            
+
             document.getElementById('loading').textContent = 'Connecting to Google Sheets...';
-            
+
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -224,41 +362,34 @@
                     return response.text();
                 })
                 .then(data => {
-                    // Log the first bit of response for debugging
                     console.log("Raw response starts with:", data.substring(0, 100));
-                    
-                    // Google's response comes wrapped in a prefix we need to remove
-                    // The format is usually: "/*O_o*/google.visualization.Query.setResponse({...});"
+
                     const jsonStart = data.indexOf('{');
                     const jsonEnd = data.lastIndexOf('}');
-                    
+
                     if (jsonStart === -1 || jsonEnd === -1) {
-                        // If we can't find valid JSON, show the user and display in the console
                         console.error("Couldn't parse Google Sheets response. Raw data:", data);
                         throw new Error("Invalid data format from Google Sheets. Is the sheet published to the web?");
                     }
-                    
+
                     const jsonString = data.substring(jsonStart, jsonEnd + 1);
                     console.log("Extracted JSON starts with:", jsonString.substring(0, 100));
-                    
+
                     const jsonData = JSON.parse(jsonString);
-                    
-                    // Process the data
+
                     document.getElementById('loading').textContent = 'Processing submissions...';
                     allSubmissions = processGoogleSheetsData(jsonData);
-                    
+
                     console.log(`Found ${allSubmissions.length} valid submissions`);
-                    
+
                     if (allSubmissions.length === 0) {
                         document.getElementById('loading').textContent = 'No submissions found. Check console for details.';
                         return;
                     }
-                    
-                    // Generate filters
+
                     generateSettingFilters();
                     generateCharacterFilters();
-                    
-                    // Display all submissions
+
                     document.getElementById('loading').style.display = 'none';
                     displaySubmissions(allSubmissions);
                 })
@@ -271,88 +402,80 @@
                     `;
                 });
         }
-        
-        // Process the Google Sheets data into our format
+
         function processGoogleSheetsData(jsonData) {
             const submissions = [];
             const rows = jsonData.table.rows;
             const cols = jsonData.table.cols;
-            
-            // Add debugging - show column headers in console
+
             console.log("Column headers:", cols.map(col => col.label));
-            
-            // Directly log the first few rows for debugging
+
             console.log("First row data sample:", rows[1]?.c);
             console.log("Second row data sample:", rows[2]?.c);
-            
-            // Map column headers to indices - more flexible with sanitization
+
             const headerMap = {};
             cols.forEach((col, index) => {
-                // Sanitize header names for more consistent matching
                 if (col.label) {
                     const label = col.label.toLowerCase().trim();
                     headerMap[label] = index;
-                    
-                    // Add common variations for more robust matching
+
                     if (label.includes('user')) headerMap['username'] = index;
                     if (label.includes('author')) headerMap['author'] = index;
                     if (label.includes('character')) headerMap['characters'] = index;
                     if (label.includes('setting')) headerMap['setting'] = index;
                     if (label.includes('submission')) headerMap['submission'] = index;
                     if (label.includes('text')) headerMap['submissiontext'] = index;
+                    if (label.includes('title')) headerMap['storytitle'] = index;
                     if (label.includes('read more')) headerMap['links'] = index;
                 }
             });
-            
+
             console.log("Header mapping:", headerMap);
             console.log("Submission text column index:", headerMap['submission'] || headerMap['submissiontext']);
-            
-            // Show total rows for debugging
+            console.log("Story title column index:", headerMap['storytitle']);
+
             console.log(`Processing ${rows.length} rows of data`);
-            
-            // Process each row (including the first row in case it's not a header)
+
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
-                
-                // Skip empty rows
+
                 if (!row || !row[0]) {
                     console.log(`Skipping row ${i}: Empty`);
                     continue;
                 }
-                
+
                 try {
-                    // For debugging, log the specific cells we're trying to access
                     if (i > 0) {  // Skip header row in logs
                         const usernameCell = row[headerMap['username']];
                         const settingCell = row[headerMap['setting']];
                         const submissionCell = row[headerMap['submission'] || headerMap['submissiontext']];
-                        
+                        const titleCell = row[headerMap['storytitle']];
+
                         console.log(`Row ${i} data:`, {
                             username: usernameCell?.v,
                             setting: settingCell?.v,
                             submissionExists: !!submissionCell,
                             submissionValue: submissionCell?.v,
-                            submissionLength: submissionCell?.v?.length
+                            submissionLength: submissionCell?.v?.length,
+                            title: titleCell?.v
                         });
                     }
-                    
-                    // Try to extract required fields with direct column indices as fallback
-                    // Based on your screenshot, username is column B (index 1), submission is column F (index 5)
+
                     const usernameIndex = headerMap['username'] || 1;
                     const settingIndex = headerMap['setting'] || 4;
                     const submissionIndex = headerMap['submission'] || headerMap['submissiontext'] || 5;
                     const charactersIndex = headerMap['characters'] || 3;
-                    
+                    const storyTitleIndex = headerMap['storytitle'];
+
                     const username = row[usernameIndex]?.v || 'Anonymous';
                     let submissionText = row[submissionIndex]?.v || '';
-                    
-                    // Skip if no username or submission text (likely a header row)
+                    let storyTitle = storyTitleIndex !== undefined ? (row[storyTitleIndex]?.v || 'Untitled') : 'Untitled';
+
                     if (!username || !submissionText) {
                         console.log(`Skipping row ${i}: Missing username or submission text`);
                         continue;
                     }
-                    
-                    // Create submission object with fallbacks for all fields
+
                     const submission = {
                         timestamp: row[0]?.v || '', // First column is usually timestamp
                         username: username,
@@ -360,45 +483,38 @@
                         links: row[headerMap['links'] || 3]?.v || '',
                         characters: parseList(row[charactersIndex]?.v || ''),
                         setting: parseList(row[settingIndex]?.v || ''),
-                        submissionText: submissionText
+                        submissionText: submissionText,
+                        storyTitle: storyTitle
                     };
-                    
+
                     submissions.push(submission);
-                    console.log(`Added submission from: ${submission.username}`);
+                    console.log(`Added submission from: ${submission.username}, Title: ${submission.storyTitle}`);
                 } catch (error) {
                     console.error(`Error processing row ${i}:`, error);
                 }
             }
-            
+
             return submissions;
         }
-            
-            return submissions;
-        }
-        
-        // Parse comma or newline separated lists
+
         function parseList(text) {
             if (!text) return [];
-            
-            // Split by commas or newlines and trim each item
+
             return text
                 .split(/[,\n]/)
                 .map(item => item.trim())
                 .filter(item => item);
         }
-        
-        // Generate setting filter tags
+
         function generateSettingFilters() {
             const allSettings = new Set();
-            
-            // Collect all unique settings
+
             allSubmissions.forEach(sub => {
                 sub.setting.forEach(setting => allSettings.add(setting));
             });
-            
-            // Create filter tags
+
             const filterContainer = document.getElementById('setting-filters');
-            
+
             allSettings.forEach(setting => {
                 const tag = document.createElement('span');
                 tag.className = 'filter-tag';
@@ -409,19 +525,16 @@
                 filterContainer.appendChild(tag);
             });
         }
-        
-        // Generate character filter tags
+
         function generateCharacterFilters() {
             const allCharacters = new Set();
-            
-            // Collect all unique characters
+
             allSubmissions.forEach(sub => {
                 sub.characters.forEach(char => allCharacters.add(char));
             });
-            
-            // Create filter tags
+
             const filterContainer = document.getElementById('character-filters');
-            
+
             allCharacters.forEach(character => {
                 const tag = document.createElement('span');
                 tag.className = 'filter-tag';
@@ -432,138 +545,151 @@
                 filterContainer.appendChild(tag);
             });
         }
-        
-        // Toggle setting filter
+
         function toggleSettingFilter(setting, tagElement) {
             const index = activeSettingFilters.indexOf(setting);
-            
+
             if (index === -1) {
-                // Add the filter
                 activeSettingFilters.push(setting);
                 tagElement.classList.add('active');
             } else {
-                // Remove the filter
                 activeSettingFilters.splice(index, 1);
                 tagElement.classList.remove('active');
             }
-            
+
             filterSubmissions();
         }
-        
-        // Toggle character filter
+
         function toggleCharacterFilter(character, tagElement) {
             const index = activeCharacterFilters.indexOf(character);
-            
+
             if (index === -1) {
-                // Add the filter
                 activeCharacterFilters.push(character);
                 tagElement.classList.add('active');
             } else {
-                // Remove the filter
                 activeCharacterFilters.splice(index, 1);
                 tagElement.classList.remove('active');
             }
-            
+
             filterSubmissions();
         }
-        
-        // Filter submissions based on search and filters
+
         function filterSubmissions() {
             const searchTerm = document.getElementById('search').value.toLowerCase();
-            
+
             const filtered = allSubmissions.filter(sub => {
-                // Search term filtering
-                const matchesSearch = 
-                    sub.username.toLowerCase().includes(searchTerm) || 
-                    sub.authorName.toLowerCase().includes(searchTerm) || 
+                const matchesSearch =
+                    sub.username.toLowerCase().includes(searchTerm) ||
+                    sub.authorName.toLowerCase().includes(searchTerm) ||
+                    sub.storyTitle.toLowerCase().includes(searchTerm) ||
                     sub.characters.some(char => char.toLowerCase().includes(searchTerm)) ||
                     sub.setting.some(setting => setting.toLowerCase().includes(searchTerm)) ||
                     sub.submissionText.toLowerCase().includes(searchTerm);
-                
-                // Character filtering
-                const matchesCharacters = 
-                    activeCharacterFilters.length === 0 || 
+
+                const matchesCharacters =
+                    activeCharacterFilters.length === 0 ||
                     activeCharacterFilters.some(char => sub.characters.includes(char));
-                
-                // Setting filtering
-                const matchesSettings = 
-                    activeSettingFilters.length === 0 || 
+
+                const matchesSettings =
+                    activeSettingFilters.length === 0 ||
                     activeSettingFilters.some(setting => sub.setting.includes(setting));
-                
+
                 return matchesSearch && matchesCharacters && matchesSettings;
             });
-            
+
             displaySubmissions(filtered);
         }
-        
-        // Display submissions on the page
+
         function displaySubmissions(subs) {
             const container = document.getElementById('submissions-container');
             container.innerHTML = '';
-            
+
             if (subs.length === 0) {
                 container.innerHTML = '<p>No submissions found matching your search.</p>';
                 return;
             }
-            
-            subs.forEach(sub => {
+
+            subs.forEach((sub, index) => {
                 const submissionDiv = document.createElement('div');
                 submissionDiv.className = 'submission';
-                
-                // Create tags for characters and settings
-                const characterTags = sub.characters.map(char => 
+                submissionDiv.setAttribute('data-index', index);
+                submissionDiv.addEventListener('click', function() {
+                    openStoryModal(sub);
+                });
+
+                const characterTags = sub.characters.map(char =>
                     `<span class="tag character-tag">${char}</span>`
                 ).join('');
-                
-                const settingTags = sub.setting.map(setting => 
+
+                const settingTags = sub.setting.map(setting =>
                     `<span class="tag setting-tag">${setting}</span>`
                 ).join('');
-                
-                // Format links if they exist
-                let linksHTML = '';
-                if (sub.links && sub.links.trim()) {
-                    linksHTML = `
-                        <div class="links">
-                            <span class="meta-label">More from this author:</span> 
-                            <a href="${sub.links}" target="_blank">${sub.links}</a>
-                        </div>
-                    `;
-                }
-                
-                // Format author display name
+
                 const authorDisplay = sub.authorName ? sub.authorName : sub.username;
-                
+                const title = sub.storyTitle || 'Untitled';
+
                 submissionDiv.innerHTML = `
-                    <h2>${sub.username}'s Submission</h2>
+                    <h2>${title}</h2>
                     <div class="meta">
                         <div class="meta-group">
                             <div><span class="meta-label">Author:</span> ${authorDisplay}</div>
-                            ${linksHTML}
                         </div>
-                        
+
                         <div class="meta-group">
                             <div><span class="meta-label">Setting:</span></div>
                             <div>${settingTags || 'Not specified'}</div>
                         </div>
-                        
+
                         <div class="meta-group">
                             <div><span class="meta-label">Characters:</span></div>
                             <div>${characterTags || 'Not specified'}</div>
                         </div>
                     </div>
-                    
-                    <div class="content">${formatContent(sub.submissionText)}</div>
+                    <span class="read-more">Read Story</span>
                 `;
-                
+
                 container.appendChild(submissionDiv);
             });
         }
-        
-        // Format content with basic HTML handling
+
+        function openStoryModal(submission) {
+            const modal = document.getElementById('story-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalAuthor = document.getElementById('modal-author');
+            const modalContent = document.getElementById('modal-content');
+            const modalLinks = document.getElementById('modal-links');
+
+            // Set the story title
+            modalTitle.textContent = submission.storyTitle || 'Untitled';
+
+            // Set the author information
+            if (submission.authorName) {
+                modalAuthor.textContent = `Author: ${submission.authorName} (${submission.username})`;
+            } else {
+                modalAuthor.textContent = `Author: ${submission.username}`;
+            }
+
+            // Set the story content
+            modalContent.innerHTML = formatContent(submission.submissionText);
+
+            // Set the author links
+            if (submission.links && submission.links.trim()) {
+                modalLinks.innerHTML = `
+                    <div><span class="meta-label">More from this author:</span></div>
+                    <div class="links"><a href="${submission.links}" target="_blank">${submission.links}</a></div>
+                `;
+            } else {
+                modalLinks.innerHTML = `<p>No additional links provided.</p>`;
+            }
+
+            // Show the modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+        }
+
         function formatContent(text) {
             if (!text) return '';
-            
-            // Replace line breaks with paragraph tags
+
             return text.replace(/\n\n/g, '</p><p>')
                        .replace(/\n/g, '<br>')
                        .replace(/^(.+)/, '<p>$1')
