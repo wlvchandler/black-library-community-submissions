@@ -5,31 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Black Library Open Submissions Collection</title>
     <style>
+        :root {
+            --text-color: #333;
+            --background-color: #f9f9f9;
+            --card-background: white;
+            --border-color: #ddd;
+            --shadow-color: rgba(0,0,0,0.1);
+            --primary-color: #4a135a;
+            --primary-hover: #5c1a6e;
+            --filter-tag-bg: #f0f0f0;
+            --filter-tag-hover: #e0e0e0;
+            --tag-bg: #e9e9e9;
+            --character-tag-bg: #e1f5fe;
+            --setting-tag-bg: #e8f5e9;
+            --header-color: #222;
+            --meta-label: #555;
+            --meta-text: #666;
+        }
+        
+        [data-theme="dark"] {
+            --text-color: #e0e0e0;
+            --background-color: #121212;
+            --card-background: #1e1e1e;
+            --border-color: #333;
+            --shadow-color: rgba(0,0,0,0.3);
+            --primary-color: #9c27b0;
+            --primary-hover: #b52fd3;
+            --filter-tag-bg: #2d2d2d;
+            --filter-tag-hover: #3d3d3d;
+            --tag-bg: #2d2d2d;
+            --character-tag-bg: #0d3b55;
+            --setting-tag-bg: #1a362d;
+            --header-color: #e0e0e0;
+            --meta-label: #bbb;
+            --meta-text: #aaa;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
-            color: #333;
-            background-color: #f9f9f9;
+            color: var(--text-color);
+            background-color: var(--background-color);
             position: relative;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         header {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         h1 {
-            color: #222;
+            color: var(--header-color);
             margin-bottom: 10px;
         }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
         .submit-button {
-            background-color: #4a135a;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 12px 25px;
@@ -37,30 +80,71 @@
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
         }
         .submit-button:hover {
-            background-color: #5c1a6e;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
         }
         .search-section {
-            background: white;
+            background: var(--card-background);
             padding: 15px 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px var(--shadow-color);
             margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
         .search-container {
             margin-bottom: 15px;
+            position: relative;
+        }
+        .search-container svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--meta-text);
+            width: 20px;
+            height: 20px;
         }
         input[type="text"] {
-            padding: 10px;
+            padding: 12px 12px 12px 40px;
             width: 100%;
             max-width: 600px;
             font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             box-sizing: border-box;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 19, 90, 0.2);
         }
         .filter-section {
             display: flex;
@@ -84,7 +168,7 @@
         }
         .filter-tag {
             display: inline-block;
-            background: #f0f0f0;
+            background: var(--filter-tag-bg);
             padding: 5px 12px;
             border-radius: 15px;
             cursor: pointer;
@@ -92,91 +176,147 @@
             font-size: 14px;
         }
         .filter-tag:hover {
-            background: #e0e0e0;
+            background: var(--filter-tag-hover);
         }
         .filter-tag.active {
-            background: #4a135a;
+            background: var(--primary-color);
             color: white;
         }
         .submission {
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
             padding: 25px;
             margin-bottom: 25px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px var(--shadow-color);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         .submission:hover {
             transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        .submission::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary-color);
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            transition: transform .3s ease;
+        }
+        .submission:hover::after {
+            transform: scaleX(1);
         }
         .submission h2 {
             margin-top: 0;
-            color: #333;
+            color: var(--header-color);
             font-size: 1.6em;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+            transition: color 0.3s ease;
         }
         .meta {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            color: #666;
+            color: var(--meta-text);
             font-size: 0.9em;
             margin-bottom: 20px;
+            transition: color 0.3s ease;
         }
         .meta-group {
             margin-bottom: 5px;
         }
         .meta-label {
             font-weight: bold;
-            color: #555;
+            color: var(--meta-label);
+            transition: color 0.3s ease;
         }
         .tag {
             display: inline-block;
-            background: #e9e9e9;
+            background: var(--tag-bg);
             padding: 3px 10px;
             border-radius: 15px;
             margin-right: 5px;
             margin-bottom: 5px;
             font-size: 0.9em;
+            transition: background-color 0.3s ease;
         }
         .character-tag {
-            background-color: #e1f5fe;
+            background-color: var(--character-tag-bg);
         }
         .setting-tag {
-            background-color: #e8f5e9;
+            background-color: var(--setting-tag-bg);
         }
         #loading {
             text-align: center;
             padding: 30px;
             font-style: italic;
-            color: #666;
+            color: var(--meta-text);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(74, 19, 90, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         .read-more {
             display: inline-block;
-            background-color: #4a135a;
+            background-color: var(--primary-color);
             color: white;
             padding: 8px 15px;
             border-radius: 5px;
             margin-top: 10px;
             font-size: 0.9em;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
         }
         .read-more:hover {
-            background-color: #5c1a6e;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px var(--shadow-color);
         }
         .links {
             margin-top: 10px;
         }
         .links a {
-            color: #4a135a;
+            color: var(--primary-color);
             text-decoration: none;
+            transition: color 0.3s ease;
         }
         .links a:hover {
             text-decoration: underline;
+        }
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 5px;
+            color: var(--meta-text);
+            font-size: 0.9em;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .stat svg {
+            width: 16px;
+            height: 16px;
         }
         /* Modal Reader Styles */
         .modal-overlay {
@@ -185,58 +325,97 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8);
             z-index: 1000;
             display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
         }
         .modal-reader {
-            background-color: white;
+            background-color: var(--card-background);
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
             overflow-y: auto;
             position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
         }
-        .modal-close {
+        .modal-overlay.active .modal-reader {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .modal-actions {
             position: absolute;
             top: 15px;
             right: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .modal-action-btn {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
-            color: #555;
-            transition: color 0.2s;
+            color: var(--meta-label);
+            transition: color 0.2s, transform 0.2s;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .modal-close:hover {
-            color: #000;
+        .modal-action-btn:hover {
+            color: var(--primary-color);
+            background-color: rgba(74, 19, 90, 0.1);
+            transform: scale(1.1);
         }
         .story-title {
             margin-top: 0;
-            color: #333;
+            color: var(--header-color);
             font-size: 2em;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
             margin-bottom: 15px;
+            transition: color 0.3s ease;
         }
         .story-author {
             font-size: 1.1em;
             margin-bottom: 20px;
-            color: #555;
+            color: var(--meta-label);
+            transition: color 0.3s ease;
         }
         .story-content {
             line-height: 1.8;
             white-space: pre-wrap;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: color 0.3s ease;
+            font-size: 1.05em;
+        }
+        .reading-progress {
+            position: sticky;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.1s;
+            z-index: 10;
         }
         .author-info {
             margin-top: 20px;
@@ -246,8 +425,106 @@
             font-weight: bold;
             font-size: 1.2em;
             margin-bottom: 10px;
-            color: #4a135a;
+            color: var(--primary-color);
+            transition: color 0.3s ease;
         }
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        .reading-controls {
+            display: flex;
+            gap: 15px;
+        }
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .pagination-btn {
+            border: none;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        .pagination-btn:hover:not(.active) {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .pagination-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* No results message */
+        .no-results {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 8px;
+            color: var(--meta-text);
+            transition: all 0.3s ease;
+        }
+        .no-results-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        /* Sorting Controls */
+        .sorting-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        .sort-dropdown {
+            background-color: var(--card-background);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .sort-dropdown:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* Dark Mode Toggle Animation */
+        .theme-icon-container {
+            position: relative;
+            width: 18px;
+            height: 18px;
+        }
+        .theme-icon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.3s, transform 0.5s;
+        }
+        .theme-icon.hidden {
+            opacity: 0;
+            transform: rotate(90deg);
+        }
+        
+        /* Responsiveness */
         @media (max-width: 768px) {
             .submission {
                 padding: 15px;
@@ -260,6 +537,32 @@
                 width: 95%;
                 padding: 20px;
             }
+            .header-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .filter-section {
+                flex-direction: column;
+            }
+        }
+        
+        /* Accessibility Improvements */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        :focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        .focus-visible:focus:not(:focus-visible) {
+            outline: none;
         }
     </style>
 </head>
@@ -267,13 +570,52 @@
     <header>
         <h1>Black Library Open Submissions Collection</h1>
         <p>A community collection of stories submitted for the Black Library open submissions window.</p>
-        <button class="submit-button" onclick="window.open('https://forms.gle/rcDED76bim8Q1j218', '_blank')">Submit Your Story</button>
+        <div class="header-controls">
+            <button class="submit-button" onclick="window.open('https://forms.gle/rcDED76bim8Q1j218', '_blank')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                Submit Your Story
+            </button>
+            <button id="theme-toggle" class="theme-toggle">
+                <div class="theme-icon-container">
+                    <svg class="theme-icon sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="theme-icon moon-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </div>
+                <span id="theme-text">Dark Mode</span>
+            </button>
+        </div>
     </header>
 
     <div class="search-section">
         <div class="search-container">
-            <label for="search">Search submissions:</label>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <label for="search" class="visually-hidden">Search submissions:</label>
             <input type="text" id="search" placeholder="Search by title, author, character, content...">
+        </div>
+
+        <div class="sorting-controls">
+            <select id="sort-stories" class="sort-dropdown">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+            </select>
         </div>
 
         <div class="filter-section">
@@ -293,19 +635,64 @@
         </div>
     </div>
 
-    <div id="loading">Loading submissions...</div>
+    <div id="loading">
+        <div class="loading-spinner"></div>
+        <div>Loading submissions...</div>
+    </div>
     <div id="submissions-container"></div>
+    <div id="pagination" class="pagination"></div>
 
     <!-- Modal Reader -->
     <div class="modal-overlay" id="story-modal">
         <div class="modal-reader">
-            <button class="modal-close" id="close-modal">&times;</button>
+            <div class="reading-progress" id="reading-progress"></div>
+            <div class="modal-actions">
+                <button class="modal-action-btn" id="font-size-toggle" title="Toggle font size">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </button>
+                <button class="modal-action-btn" id="share-story" title="Share story">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                </button>
+                <button class="modal-action-btn" id="close-modal" title="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
             <h2 class="story-title" id="modal-title"></h2>
             <div class="story-author" id="modal-author"></div>
             <div class="story-content" id="modal-content"></div>
-            <div class="author-info">
-                <div class="author-info-title">Like this person's story?</div>
-                <div id="modal-links"></div>
+            <div class="modal-footer">
+                <div class="author-info">
+                    <div class="author-info-title">Like this person's story?</div>
+                    <div id="modal-links"></div>
+                </div>
+                <div class="reading-controls">
+                    <button class="modal-action-btn" id="prev-story" title="Previous story">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+                    <button class="modal-action-btn" id="next-story" title="Next story">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -317,35 +704,141 @@
         let allSubmissions = [];
         let activeSettingFilters = [];
         let activeCharacterFilters = [];
-
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let currentSortMethod = 'newest';
+        let currentFontSize = 'normal';
+        let currentTheme = localStorage.getItem('theme') || 'light';
+        let filteredSubmissions = [];
+        let currentStoryIndex = 0;
+        
+        // Apply saved theme on page load
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             fetchSubmissions();
-
+            
+            // Setup search functionality
             document.getElementById('search').addEventListener('input', function() {
+                currentPage = 1;
                 filterSubmissions();
             });
-
-            // Close modal when clicking the close button
-            document.getElementById('close-modal').addEventListener('click', function() {
-                document.getElementById('story-modal').style.display = 'none';
-                document.body.style.overflow = '';
+            
+            // Setup sorting
+            document.getElementById('sort-stories').addEventListener('change', function() {
+                currentSortMethod = this.value;
+                currentPage = 1;
+                sortSubmissions();
+                displaySubmissions(filteredSubmissions);
             });
-
+            
+            // Setup theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeText = document.getElementById('theme-text');
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+            
+            // Update theme toggle button state
+            updateThemeToggle();
+            
+            themeToggle.addEventListener('click', function() {
+                if (currentTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    currentTheme = 'dark';
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    currentTheme = 'light';
+                }
+                updateThemeToggle();
+            });
+            
+            function updateThemeToggle() {
+                if (currentTheme === 'dark') {
+                    themeText.textContent = 'Light Mode';
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                } else {
+                    themeText.textContent = 'Dark Mode';
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
+            }
+            
+            // Modal controls
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            
             // Close modal when clicking outside the modal content
             document.getElementById('story-modal').addEventListener('click', function(e) {
                 if (e.target === this) {
-                    this.style.display = 'none';
-                    document.body.style.overflow = '';
+                    closeModal();
                 }
             });
-
+            
             // Close modal with Escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && document.getElementById('story-modal').style.display === 'flex') {
-                    document.getElementById('story-modal').style.display = 'none';
-                    document.body.style.overflow = '';
+                if (e.key === 'Escape' && document.getElementById('story-modal').classList.contains('active')) {
+                    closeModal();
+                }
+                // Arrow key navigation
+                if (document.getElementById('story-modal').classList.contains('active')) {
+                    if (e.key === 'ArrowLeft') {
+                        navigateStory('prev');
+                    } else if (e.key === 'ArrowRight') {
+                        navigateStory('next');
+                    }
                 }
             });
+            
+            // Font size toggle
+            document.getElementById('font-size-toggle').addEventListener('click', function() {
+                const storyContent = document.getElementById('modal-content');
+                if (currentFontSize === 'normal') {
+                    storyContent.style.fontSize = '1.2em';
+                    currentFontSize = 'large';
+                } else {
+                    storyContent.style.fontSize = '1.05em';
+                    currentFontSize = 'normal';
+                }
+            });
+            
+            // Share story
+            document.getElementById('share-story').addEventListener('click', function() {
+                const storyTitle = document.getElementById('modal-title').innerText;
+                const authorName = document.getElementById('modal-author').innerText.replace('Author: ', '');
+                
+                // Create a shareable URL or text
+                const shareText = `Check out "${storyTitle}" by ${authorName} in the Black Library Open Submissions Collection`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: storyTitle,
+                        text: shareText,
+                        url: window.location.href
+                    })
+                    .catch(error => console.log('Error sharing:', error));
+                } else {
+                    // Fallback for browsers that don't support the Web Share API
+                    navigator.clipboard.writeText(shareText + '\n' + window.location.href)
+                        .then(() => alert('Story info copied to clipboard!'))
+                        .catch(err => console.log('Error copying text:', err));
+                }
+            });
+            
+            // Story navigation
+            document.getElementById('prev-story').addEventListener('click', function() {
+                navigateStory('prev');
+            });
+            
+            document.getElementById('next-story').addEventListener('click', function() {
+                navigateStory('next');
+            });
+            
+            // Reading progress
+            document.querySelector('.modal-reader').addEventListener('scroll', updateReadingProgress);
         });
 
         function fetchSubmissions() {
@@ -597,24 +1090,81 @@
                 return matchesSearch && matchesCharacters && matchesSettings;
             });
 
-            displaySubmissions(filtered);
+            sortSubmissions(filtered);
+        }
+        
+        function sortSubmissions(submissions = filteredSubmissions) {
+            let sorted = [...submissions];
+            
+            switch (currentSortMethod) {
+                case 'newest':
+                    sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    break;
+                case 'oldest':
+                    sorted.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    break;
+                case 'title-asc':
+                    sorted.sort((a, b) => {
+                        const titleA = (a.storyTitle || 'Untitled').toLowerCase();
+                        const titleB = (b.storyTitle || 'Untitled').toLowerCase();
+                        return titleA.localeCompare(titleB);
+                    });
+                    break;
+                case 'title-desc':
+                    sorted.sort((a, b) => {
+                        const titleA = (a.storyTitle || 'Untitled').toLowerCase();
+                        const titleB = (b.storyTitle || 'Untitled').toLowerCase();
+                        return titleB.localeCompare(titleA);
+                    });
+                    break;
+            }
+            
+            displaySubmissions(sorted);
         }
 
         function displaySubmissions(subs) {
             const container = document.getElementById('submissions-container');
             container.innerHTML = '';
-
+            
+            // Keep a reference to the filtered submissions for pagination
+            filteredSubmissions = subs;
+            
             if (subs.length === 0) {
-                container.innerHTML = '<p>No submissions found matching your search.</p>';
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">📚</div>
+                        <p>No submissions found matching your search.</p>
+                        <p>Try adjusting your filters or search terms.</p>
+                    </div>
+                `;
+                document.getElementById('pagination').innerHTML = '';
                 return;
             }
-
-            subs.forEach((sub, index) => {
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(subs.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, subs.length);
+            const currentSubmissions = subs.slice(startIndex, endIndex);
+            
+            // Display the current page of submissions
+            currentSubmissions.forEach((sub, localIndex) => {
+                const globalIndex = startIndex + localIndex;
                 const submissionDiv = document.createElement('div');
                 submissionDiv.className = 'submission';
-                submissionDiv.setAttribute('data-index', index);
+                submissionDiv.setAttribute('data-index', globalIndex);
+                submissionDiv.setAttribute('tabindex', '0'); // Make focusable for accessibility
+                
+                // Open modal on click or when Enter key is pressed
                 submissionDiv.addEventListener('click', function() {
+                    currentStoryIndex = globalIndex;
                     openStoryModal(sub);
+                });
+                submissionDiv.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        currentStoryIndex = globalIndex;
+                        openStoryModal(sub);
+                    }
                 });
 
                 const characterTags = sub.characters.map(char =>
@@ -627,6 +1177,13 @@
 
                 const authorDisplay = sub.authorName ? sub.authorName : sub.username;
                 const title = sub.storyTitle || 'Untitled';
+                
+                // Calculate estimated reading time (5 words per second)
+                const wordCount = sub.submissionText.split(/\s+/).length;
+                const readingTime = Math.max(1, Math.ceil(wordCount / 300)); // in minutes, minimum 1 minute
+                
+                // Format submission date
+                const submissionDate = sub.timestamp ? new Date(sub.timestamp).toLocaleDateString() : 'Unknown date';
 
                 submissionDiv.innerHTML = `
                     <h2>${title}</h2>
@@ -645,11 +1202,88 @@
                             <div>${characterTags || 'Not specified'}</div>
                         </div>
                     </div>
-                    <span class="read-more">Read Story</span>
+                    <div class="stats">
+                        <div class="stat">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            ${readingTime} min read
+                        </div>
+                        <div class="stat">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            ${submissionDate}
+                        </div>
+                    </div>
+                    <button class="read-more">Read Story</button>
                 `;
 
                 container.appendChild(submissionDiv);
             });
+            
+            // Create pagination controls
+            createPagination(totalPages);
+        }
+        
+        function createPagination(totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn';
+            prevBtn.innerHTML = '&laquo;';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displaySubmissions(filteredSubmissions);
+                    window.scrollTo(0, 0);
+                }
+            });
+            paginationContainer.appendChild(prevBtn);
+            
+            // Page buttons
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4 && startPage > 1) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = 'pagination-btn';
+                if (i === currentPage) pageBtn.classList.add('active');
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    displaySubmissions(filteredSubmissions);
+                    window.scrollTo(0, 0);
+                });
+                paginationContainer.appendChild(pageBtn);
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn';
+            nextBtn.innerHTML = '&raquo;';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displaySubmissions(filteredSubmissions);
+                    window.scrollTo(0, 0);
+                }
+            });
+            paginationContainer.appendChild(nextBtn);
         }
 
         function openStoryModal(submission) {
@@ -658,6 +1292,10 @@
             const modalAuthor = document.getElementById('modal-author');
             const modalContent = document.getElementById('modal-content');
             const modalLinks = document.getElementById('modal-links');
+            const readingProgress = document.getElementById('reading-progress');
+
+            // Reset the reading progress
+            readingProgress.style.width = '0%';
 
             // Set the story title
             modalTitle.textContent = submission.storyTitle || 'Untitled';
@@ -671,6 +1309,7 @@
 
             // Set the story content
             modalContent.innerHTML = formatContent(submission.submissionText);
+            modalContent.style.fontSize = currentFontSize === 'large' ? '1.2em' : '1.05em';
 
             // Set the author links
             if (submission.links && submission.links.trim()) {
@@ -682,9 +1321,59 @@
                 modalLinks.innerHTML = `<p>No additional links provided.</p>`;
             }
 
-            // Show the modal
+            // Update prev/next buttons
+            updateNavigationButtons();
+
+            // Show the modal with animation
             modal.style.display = 'flex';
+            // Trigger reflow for animation
+            void modal.offsetWidth;
+            modal.classList.add('active');
             document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+            
+            // Scroll to top of modal
+            const modalReader = document.querySelector('.modal-reader');
+            modalReader.scrollTop = 0;
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('story-modal');
+            modal.classList.remove('active');
+            // Wait for animation to finish before hiding
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
+        }
+        
+        function navigateStory(direction) {
+            if (direction === 'prev' && currentStoryIndex > 0) {
+                currentStoryIndex--;
+                openStoryModal(filteredSubmissions[currentStoryIndex]);
+            } else if (direction === 'next' && currentStoryIndex < filteredSubmissions.length - 1) {
+                currentStoryIndex++;
+                openStoryModal(filteredSubmissions[currentStoryIndex]);
+            }
+        }
+        
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prev-story');
+            const nextBtn = document.getElementById('next-story');
+            
+            prevBtn.disabled = currentStoryIndex === 0;
+            nextBtn.disabled = currentStoryIndex === filteredSubmissions.length - 1;
+        }
+        
+        function updateReadingProgress() {
+            const modalReader = document.querySelector('.modal-reader');
+            const progressBar = document.getElementById('reading-progress');
+            
+            const scrollTop = modalReader.scrollTop;
+            const scrollHeight = modalReader.scrollHeight;
+            const clientHeight = modalReader.clientHeight;
+            
+            const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+            progressBar.style.width = `${Math.min(100, scrollPercentage)}%`;
         }
 
         function formatContent(text) {
