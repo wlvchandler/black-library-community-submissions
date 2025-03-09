@@ -158,6 +158,9 @@
     <header>
         <h1>Black Library Open Submissions Collection</h1>
         <p>A community collection of stories submitted for the Black Library open submissions window.</p>
+        <div style="margin-top: 10px; font-size: 0.9em;">
+            <p><strong>Having issues?</strong> Make sure your Google Sheet is <a href="https://support.google.com/docs/answer/183965" target="_blank">published to the web</a> (File > Share > Publish to web).</p>
+        </div>
     </header>
     
     <div class="search-section">
@@ -210,18 +213,46 @@
         function fetchSubmissions() {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
             
+            document.getElementById('loading').textContent = 'Connecting to Google Sheets...';
+            
             fetch(url)
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    document.getElementById('loading').textContent = 'Parsing data...';
+                    return response.text();
+                })
                 .then(data => {
+                    // Log the first bit of response for debugging
+                    console.log("Raw response starts with:", data.substring(0, 100));
+                    
                     // Google's response comes wrapped in a prefix we need to remove
                     // The format is usually: "/*O_o*/google.visualization.Query.setResponse({...});"
                     const jsonStart = data.indexOf('{');
                     const jsonEnd = data.lastIndexOf('}');
+                    
+                    if (jsonStart === -1 || jsonEnd === -1) {
+                        // If we can't find valid JSON, show the user and display in the console
+                        console.error("Couldn't parse Google Sheets response. Raw data:", data);
+                        throw new Error("Invalid data format from Google Sheets. Is the sheet published to the web?");
+                    }
+                    
                     const jsonString = data.substring(jsonStart, jsonEnd + 1);
+                    console.log("Extracted JSON starts with:", jsonString.substring(0, 100));
+                    
                     const jsonData = JSON.parse(jsonString);
                     
                     // Process the data
+                    document.getElementById('loading').textContent = 'Processing submissions...';
                     allSubmissions = processGoogleSheetsData(jsonData);
+                    
+                    console.log(`Found ${allSubmissions.length} valid submissions`);
+                    
+                    if (allSubmissions.length === 0) {
+                        document.getElementById('loading').textContent = 'No submissions found. Check console for details.';
+                        return;
+                    }
                     
                     // Generate filters
                     generateSettingFilters();
@@ -233,7 +264,11 @@
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
-                    document.getElementById('loading').textContent = 'Error loading submissions. Please try again later.';
+                    document.getElementById('loading').innerHTML = `
+                        <p>Error loading submissions: ${error.message}</p>
+                        <p>Please make sure your Google Sheet is published to the web.</p>
+                        <p>See browser console for technical details (press F12 to open).</p>
+                    `;
                 });
         }
         
@@ -243,32 +278,79 @@
             const rows = jsonData.table.rows;
             const cols = jsonData.table.cols;
             
-            // Map column headers to indices
+            // Add debugging - show column headers in console
+            console.log("Column headers:", cols.map(col => col.label));
+            
+            // Map column headers to indices - more flexible with sanitization
             const headerMap = {};
             cols.forEach((col, index) => {
-                const label = col.label.toLowerCase();
-                headerMap[label] = index;
+                // Sanitize header names for more consistent matching
+                if (col.label) {
+                    const label = col.label.toLowerCase().trim();
+                    headerMap[label] = index;
+                    
+                    // Add common variations for more robust matching
+                    if (label.includes('user')) headerMap['username'] = index;
+                    if (label.includes('author')) headerMap['author'] = index;
+                    if (label.includes('character')) headerMap['characters'] = index;
+                    if (label.includes('setting')) headerMap['setting'] = index;
+                    if (label.includes('submission')) headerMap['submission'] = index;
+                    if (label.includes('text')) headerMap['submissiontext'] = index;
+                    if (label.includes('read more')) headerMap['links'] = index;
+                }
             });
             
-            // Skip header row
-            for (let i = 1; i < rows.length; i++) {
+            console.log("Header mapping:", headerMap);
+            
+            // Show total rows for debugging
+            console.log(`Processing ${rows.length} rows of data`);
+            
+            // Process each row (including the first row in case it's not a header)
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].c;
                 
                 // Skip empty rows
-                if (!row || !row[0]) continue;
+                if (!row || !row[0]) {
+                    console.log(`Skipping row ${i}: Empty`);
+                    continue;
+                }
                 
-                // Create submission object - adjust these indices based on actual column order
-                const submission = {
-                    timestamp: row[headerMap['timestamp']]?.v || '',
-                    username: row[headerMap['username']]?.v || 'Anonymous',
-                    authorName: row[headerMap['author name (optional)']]?.v || '',
-                    links: row[headerMap['where can we read more of your stuff?']]?.v || '',
-                    characters: parseList(row[headerMap['which characters are in your story?']]?.v || ''),
-                    setting: parseList(row[headerMap['which setting did you choose?']]?.v || ''),
-                    submissionText: row[headerMap['submission text']]?.v || 'No content provided'
-                };
-                
-                submissions.push(submission);
+                try {
+                    // Try to extract required fields (username and submission text are essential)
+                    const username = row[headerMap['username']]?.v || 'Anonymous';
+                    const submissionText = row[headerMap['submission'] || headerMap['submissiontext']]?.v || '';
+                    
+                    // Skip if no submission text (likely a header row or empty submission)
+                    if (!submissionText) {
+                        console.log(`Skipping row ${i}: No submission text`);
+                        continue;
+                    }
+                    
+                    // Create submission object with fallbacks for all fields
+                    const submission = {
+                        timestamp: row[0]?.v || '', // First column is usually timestamp
+                        username: username,
+                        authorName: row[headerMap['author'] || headerMap['author name']]?.v || '',
+                        links: row[headerMap['links']]?.v || '',
+                        characters: parseList(row[headerMap['characters']]?.v || ''),
+                        setting: parseList(row[headerMap['setting']]?.v || ''),
+                        submissionText: submissionText
+                    };
+                    
+                    // If we're missing critical fields, try direct indices as a fallback
+                    if (!submission.username && row[1]) submission.username = row[1].v || 'Anonymous';
+                    if (!submission.submissionText && row[6]) submission.submissionText = row[6].v || 'No content provided';
+                    
+                    // One last check to make sure we have content
+                    if (submission.submissionText && submission.submissionText !== 'No content provided') {
+                        submissions.push(submission);
+                        console.log(`Added submission from: ${submission.username}`);
+                    } else {
+                        console.log(`Skipping row ${i}: Invalid submission data`);
+                    }
+                } catch (error) {
+                    console.error(`Error processing row ${i}:`, error);
+                }
             }
             
             return submissions;
